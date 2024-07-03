@@ -1,24 +1,41 @@
-from flask import Flask, jsonify
+#from flask import Flask, jsonify
 #from flask_restful import Api, Resource
 #from flask_sqlalchemy import SQLAlchemy
 #from flask_swagger_ui import get_swaggerui_blueprint
+from flask import Flask, render_template, request
+import requests
 
 app = Flask(__name__)
-communes = {
-    "Goma": ["kyeshero", "himbi 1", "himbi 2", "le volcan", "katindo",
-              "carmel", "mapendo", "centre ville", "lac vert", "himbi 3",
-              "murara", "kituku", "nyarubande", "ulpgl", "cclk",],
-    "Karisimbi": ["Ndosho", "Katoyi", "Afia bora", "kantindo 2", "mabanga sud",
-              "mabanga nord", "birere", "Turunga", "Mugunga"],
+
+API_KEY = '78dac4af814e88ddca23f94fdf832a95'
+
+@app.route('/')
+def home():
+    city = request.args.get('city', 'Goma')
+    url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric'
+    response = requests.get(url)
+    data = response.json()
+    temperature = data['main']['temp'] if 'main' in data else 'N/A'
+    return render_template('index.html', temperature=temperature, city=city)
+
+if __name__ == '__main__':
+    app.run(debug=True)
+#app = Flask(__name__)
+#communes = {
+    #"Goma": ["kyeshero", "himbi 1", "himbi 2", "le volcan", "katindo",
+              #"carmel", "mapendo", "centre ville", "lac vert", "himbi 3",
+              #"murara", "kituku", "nyarubande", "ulpgl", "cclk",],
+    #"Karisimbi": ["Ndosho", "Katoyi", "Afia bora", "kantindo 2", "mabanga sud",
+             # "mabanga nord", "birere", "Turunga", "Mugunga"],
     
-    }
-@app.route('/communes/<ville>')
-def get_communes(ville):
+   # }
+#@app.route('/')
+#def get_communes(ville):
     
-    if ville in communes:
-        return jsonify(communes[ville])
-    else:
-        return jsonify({"error": "Ville non trouvée"}), 404
+   # if ville in communes:
+        #return jsonify(communes[ville])
+    #else:
+       # return jsonify({"error": "Ville non trouvée"}), 404
 
     
 
