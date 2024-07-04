@@ -2,43 +2,53 @@
 #from flask_restful import Api, Resource
 #from flask_sqlalchemy import SQLAlchemy
 #from flask_swagger_ui import get_swaggerui_blueprint
-from flask import Flask, render_template, request
+import os
+from supabase import create_client, Client
+from flask import Flask, jsonify, request
 import requests
 
 app = Flask(__name__)
 
-API_KEY = '78dac4af814e88ddca23f94fdf832a95'
+URL = 'https://fbvbqxphjgbrcnupaqss.supabase.co'
+KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZidmJxeHBoamdicmNudXBhcXNzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTk5OTk1MTQsImV4cCI6MjAzNTU3NTUxNH0.DjphLasvwmf9EBl4ZAmxdiorPKR1phe6-T4r-jqDYxs'
+supabase: Client = create_client(URL, KEY)
+
+API_KEY = "78dac4af814e88ddca23f94fdf832a95"
 
 @app.route('/')
-def home():
-    city = request.args.get('city', 'Goma')
-    url = f'http://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric'
-    response = requests.get(url)
-    data = response.json()
-    temperature = data['main']['temp'] if 'main' in data else 'N/A'
-    return render_template('index.html', temperature=temperature, city=city)
+def index():
+    return "Bienvenue à l'API météo !"
+
+@app.route('/meteo/<ville>')
+def get_meteo(ville):
+    base_url = "http://api.openweathermap.org/data/2.5/weather?"
+    complete_url = base_url + "appid=" + API_KEY + "&q=" + ville
+    response = requests.get(complete_url)
+
+    if response.status_code == 200:
+        data = response.json()
+        temp_kelvin = data['main']['temp']
+        temp_celsius = temp_kelvin - 273.15  # Conversion de Kelvin en Celsius
+        return jsonify({'ville': ville, 'temperature': round(temp_celsius, 2)})
+    else:
+        return jsonify({'error': 'Ville non trouvée'}), 404
+
+@app.route('/communes/<ville>')
+def get_communes(ville):
+    response = (
+        supabase.table("Ville")
+        .select("communes")
+        .eq("nom", ville)
+        .execute()
+    )
+
+    if response.data:
+        return jsonify({"communes": response.data[0]["communes"]})
+    else:
+        return jsonify({"error": "Ville non trouvée"}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
-#app = Flask(__name__)
-#communes = {
-    #"Goma": ["kyeshero", "himbi 1", "himbi 2", "le volcan", "katindo",
-              #"carmel", "mapendo", "centre ville", "lac vert", "himbi 3",
-              #"murara", "kituku", "nyarubande", "ulpgl", "cclk",],
-    #"Karisimbi": ["Ndosho", "Katoyi", "Afia bora", "kantindo 2", "mabanga sud",
-             # "mabanga nord", "birere", "Turunga", "Mugunga"],
-    
-   # }
-#@app.route('/')
-#def get_communes(ville):
-    
-   # if ville in communes:
-        #return jsonify(communes[ville])
-    #else:
-       # return jsonify({"error": "Ville non trouvée"}), 404
-
-    
-
 
 #app = Flask(__name__)
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///communes.db'
