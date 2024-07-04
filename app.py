@@ -47,9 +47,6 @@ def get_communes(ville):
     else:
         return jsonify({"error": "Ville non trouvée"}), 404
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
 #app = Flask(__name__)
 #app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///communes.db'
 #app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
